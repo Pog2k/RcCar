@@ -29,7 +29,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.1717080562" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler">
 								<option id="gnu.cpp.compiler.option.optimization.level.1336613720" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.debugging.level.611273184" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
-								<option id="gnu.cpp.compiler.option.other.other.474337302" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" useByScannerDiscovery="false" value="-c -fmessage-length=0 --sysroot=/home/pog/RaspberryCC/sync/ -std=gnu++11" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.other.other.474337302" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" useByScannerDiscovery="false" value="-c -fmessage-length=0 --sysroot=${PiCCPath}/sync/ -std=gnu++11" valueType="string"/>
 								<option id="gnu.cpp.compiler.option.include.paths.1018439908" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="/home/pog/RaspberryCC/sync/usr/include"/>
 								</option>
@@ -44,7 +44,7 @@
 								<option id="gnu.cpp.link.option.paths.45017767" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="/home/pog/RaspberryCC/sync/usr/lib/arm-linux-gnueabihf/"/>
 								</option>
-								<option id="gnu.cpp.link.option.flags.1959430013" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="--sysroot=/home/pog/RaspberryCC/sync/" valueType="string"/>
+								<option id="gnu.cpp.link.option.flags.1959430013" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="--sysroot=${PiCCPath}/sync/" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1972993423" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -127,6 +127,13 @@
 		</scannerConfigBuildInfo>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
-	<storageModule moduleId="refreshScope"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Release">
+			<resource resourceType="PROJECT" workspacePath="/RcBridge"/>
+		</configuration>
+		<configuration configurationName="Debug">
+			<resource resourceType="PROJECT" workspacePath="/RcBridge"/>
+		</configuration>
+	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>
