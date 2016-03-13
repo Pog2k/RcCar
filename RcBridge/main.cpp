@@ -13,35 +13,54 @@
 #include <thread>
 #include <utility>
 #include <boost/asio.hpp>
+#include <boost/thread.hpp>
+
 
 using boost::asio::ip::tcp;
 
-const int max_length = 1024;
+boost::asio::io_service ioService;
+boost::asio::serial_port serialPort(ioService);
+boost::condition_variable RxComplete;
+boost::condition_variable TcpRxComplete;
+boost::mutex mutex;
+boost::mutex mutex2;
+std::string TmpString="";
 
-void session(tcp::socket sock)
+
+const int TcpBuffer_maxLength = 1024;
+
+void session(boost::shared_ptr<boost::asio::ip::tcp::socket> sock)
 {
   try
   {
     for (;;)
     {
-      char data[max_length];
+      char data[TcpBuffer_maxLength];
 
       boost::system::error_code error;
-      size_t length = sock.read_some(boost::asio::buffer(data), error);
+      size_t length = sock->read_some(boost::asio::buffer(data), error);
       if (error == boost::asio::error::eof)
+    	{
+    	std::cout << "connection closed:" << "\n";
         break; // Connection closed cleanly by peer.
+    	}
       else if (error)
         throw boost::system::system_error(error); // Some other error.
 
-      boost::asio::write(sock, boost::asio::buffer(data, length));
+      std::cout << "received:"<< data << "\n";
+      mutex2.lock();
+      TmpString = std::string(data);
+      mutex2.unlock();
+      std::cout << "send notify" << "\n";
+      TcpRxComplete.notify_all();
+
+      boost::asio::write(*sock, boost::asio::buffer(data, length));
     }
   }
   catch (std::exception& e)
   {
     std::cerr << "Exception in thread: " << e.what() << "\n";
   }
-  std::cout << " exit session \n";
-
 }
 
 void server(boost::asio::io_service& io_service, unsigned short port)
@@ -49,30 +68,121 @@ void server(boost::asio::io_service& io_service, unsigned short port)
   tcp::acceptor a(io_service, tcp::endpoint(tcp::v4(), port));
   for (;;)
   {
-    tcp::socket sock(io_service);
-    a.accept(sock);
-    std::thread(session, std::move(sock)).detach();
+	auto sock = boost::shared_ptr<tcp::socket>(new tcp::socket(io_service));
+    a.accept(*sock);
+    boost::thread t3(session,sock);
+    t3.detach();
+     //std::thread(session, std::move(sock)).detach();
   }
 }
 
+void writeSerial( )
+{
+	std::string s = "";
+	boost::mutex::scoped_lock lock(mutex); // lock for wait condition
+	std::cout << "Thread: writeSerial entered. Listen for thread which handles socket"<< std::endl;
+
+	while(true)
+	{
+		TcpRxComplete.wait(lock);  // wait for notify from other thread
+		mutex2.lock();
+		serialPort.write_some(boost::asio::buffer(TmpString));
+		mutex2.unlock();
+		std::cout << "writeSerial to serial: "<< TmpString << std::endl;
+	}
+}
+
+// read character from serial port
+void readSerial()
+{
+	char c;
+	const uint8_t serial_max_char_len = 50;
+	uint8_t cnt=0;
+	std::cout << "readSerial function entered" << std::endl;
+	std::string serial_rx_buffer;
+
+	// receive uart characters until newline \n
+	while(true)
+	{
+		serial_rx_buffer.clear();
+		do
+		{
+		   read(serialPort,boost::asio::buffer(&c,1));
+		   serial_rx_buffer+=c;
+		  std::cout << c << std::endl;
+		   cnt++;
+		}
+		while(c != '\n' || cnt >=serial_max_char_len );
+
+		if(c=='\n')
+		{
+			// send receive string
+			// Do Anything with data. Maybe send ?
+			 std::cout << "serial_rx_buffer:"<<serial_rx_buffer;
+		}
+
+
+		if(cnt >= serial_max_char_len)
+		{
+			//send receive string
+			 std::cout << "max uart charactes received \n";
+		}
+		cnt=0;
+
+	}
+}
+
+
+
+
 int main(int argc, char* argv[])
 {
-  try
-  {
-    if (argc != 2)
+	// check input arguments and inform user if fails
+
+    if (argc != 3)
     {
-      std::cerr << "Usage: blocking_tcp_echo_server <port>\n";
+      std::cerr << "Missing input arguments" << std::endl;
+      std::cerr << "Usage: specifiy socket port and tty  <port X> <ttyX>" << std::endl;
       return 1;
     }
 
-    boost::asio::io_service io_service;
+	try
+	    {
+			// open and init usb port
+	        serialPort.open(argv[2]); // /dev/tty{choose me}
+	        serialPort.set_option(boost::asio::serial_port::baud_rate(9600));
+	        serialPort.set_option(boost::asio::serial_port::parity(boost::asio::serial_port::parity::none));
+	        serialPort.set_option(boost::asio::serial_port::character_size(boost::asio::serial_port::character_size(8)));
+	        serialPort.set_option(boost::asio::serial_port::stop_bits(boost::asio::serial_port::stop_bits::one));
+	        serialPort.set_option(boost::asio::serial_port::flow_control(boost::asio::serial_port::flow_control::none));
 
+	    }
+	    catch (boost::system::system_error& error)
+	    {
+	        std::cout << error.what() << std::endl;
+	    }
+
+	    // create threads
+	    boost::thread t1(&writeSerial);
+	    boost::thread t2(&readSerial);
+
+	    // threads running independent
+	    t1.detach();
+	    t2.detach();
+
+
+  // open socket
+  try
+  {
+    boost::asio::io_service io_service;
     server(io_service, std::atoi(argv[1]));
   }
   catch (std::exception& e)
   {
     std::cerr << "Exception: " << e.what() << "\n";
   }
-  std::cout << " return main \n";
+  std::cout << "return main " << "\n";
+
+  serialPort.close();
   return 0;
 }

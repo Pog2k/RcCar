@@ -39,6 +39,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.1709375132" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
 								<option id="gnu.cpp.link.option.libs.1002055479" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="boost_system"/>
+									<listOptionValue builtIn="false" value="boost_thread"/>
 									<listOptionValue builtIn="false" value="pthread"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.45017767" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
